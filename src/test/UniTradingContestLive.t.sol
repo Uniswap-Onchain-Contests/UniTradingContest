@@ -7,7 +7,6 @@ import "../UniTradingContest.sol";
 import {MockERC20} from "./MockERC20.sol";
 import {SwapRouter} from 'v3-periphery/SwapRouter.sol';
 import {ISwapRouter} from 'v3-periphery/interfaces/ISwapRouter.sol';
-import {UniswapV3Pool} from 'v3-core/contracts/UniswapV3Pool.sol';
 
 interface Vm {
     function roll(uint256) external;
@@ -18,7 +17,7 @@ interface Vm {
     function stopPrank() external;
 }
 
-// These tests are expected to be run against mainnet state
+// These tests are expected to be run against live network state
 // Run with `forge test -f <json rpc URI>`
 contract UniTradingContestLiveTest is DSTest {
     Vm vm = Vm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
@@ -28,7 +27,6 @@ contract UniTradingContestLiveTest is DSTest {
     // mainnet swap router, useful for running tests with fork against
     // mainnet, so we do not have to setup all uniswap stuff
     SwapRouter router = SwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564);
-    UniswapV3Pool pool = UniswapV3Pool(0x8ad599c3A0ff1De082011EFDDc58f1908eb6e6D8);
     uint32 constant START_BLOCK = 14000000;
     uint32 constant END_BLOCK = 14001000;
     uint128 constant ENTRY_FEE = 1300e18;
