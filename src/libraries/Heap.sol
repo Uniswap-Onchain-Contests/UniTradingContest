@@ -6,7 +6,7 @@ pragma solidity 0.7.6;
 
 library Heap{ // default max-heap
 
-  uint constant ROOT_INDEX = 0;
+  uint constant ROOT_INDEX = 1;
 
   struct Data{
     Node[] nodes; // root is index 1; index 0 not used
@@ -25,7 +25,7 @@ library Heap{ // default max-heap
   function insert(Data storage self, address id, uint256 priority) internal returns(Node memory){//√
     if(self.nodes.length == 0){ init(self); }// test on-the-fly-init
     Node memory n = Node(id, priority);
-    _bubbleUp(self, n, self.nodes.length - 1);
+    _bubbleUp(self, n, self.nodes.length);
     return n;
   }
   function extractMax(Data storage self) internal returns(Node memory){//√
@@ -60,6 +60,7 @@ library Heap{ // default max-heap
 
     Node memory extractedNode = self.nodes[i];
     delete self.indices[extractedNode.id];
+    delete self.nodes[i];
 
     Node memory tailNode = self.nodes[self.nodes.length-1];
 
@@ -69,6 +70,7 @@ library Heap{ // default max-heap
     }
     return extractedNode;
   }
+
   function _bubbleUp(Data storage self, Node memory n, uint i) private{//√
     if(i==ROOT_INDEX || n.priority <= self.nodes[i/2].priority){
       _insert(self, n, i);
@@ -100,7 +102,11 @@ library Heap{ // default max-heap
   }
 
   function _insert(Data storage self, Node memory n, uint i) private{//√
-    self.nodes[i] = n;
+    if(i == self.nodes.length){
+      self.nodes.push(n);
+    } else {
+      self.nodes[i] = n;
+    }
     self.indices[n.id] = i;
   }
 }

@@ -79,7 +79,8 @@ contract UniTradingContestLiveTest is DSTest {
         
         assertGt(contest.balanceOf(address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2), address(this)), 0);
         assertEq(contest.balanceOf(address(usdc), address(this)), 999e18);
-        assertEq(contest.scores()[0].id, address(this));
+        assertEq(contest.scores()[1].id, address(this));
+        assertEq(contest.currentWinner().id, address(this));
     }
 
     function dummySwap() public {

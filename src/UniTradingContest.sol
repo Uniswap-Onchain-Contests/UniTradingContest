@@ -46,6 +46,10 @@ contract UniTradingContest {
         return _scoresHeap.nodes;
     }
 
+    function currentWinner() external view returns(Heap.Node memory){
+        return _scoresHeap.getMax();
+    }
+
     constructor(
         uint32 _contestStartBlock,
         uint32 _contestEndBlock,
