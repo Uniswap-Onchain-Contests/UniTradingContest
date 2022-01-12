@@ -75,6 +75,8 @@ contract UniTradingContest {
        _scoresHeap.init();
     }
 
+    event EnterContest(address indexed account);
+
     function enterContest() external {
         require(block.number < contestStartBlock, 'contest started');
         require(balanceOf(address(contestDenominationToken), msg.sender) == 0, 'already entered');
@@ -86,14 +88,22 @@ contract UniTradingContest {
         );
         contestants++;
         contestDenominationToken.safeTransferFrom(msg.sender, address(this), entryFee);
+
+        emit EnterContest(msg.sender);
     }
+
+    event ScoreChange(address indexed account, uint256 newScore);
 
     function updateScore(address account) private {
         if(_scoresHeap.getById(account).id != address(0)){
             _scoresHeap.extractById(account);
         }
-        _scoresHeap.insert(account, balanceOf(address(contestDenominationToken), msg.sender));
+        _scoresHeap.insert(account, balanceOf(address(contestDenominationToken), account));
+
+        emit ScoreChange(account, balanceOf(address(contestDenominationToken), account));
     }
+
+    event Trade(address indexed account, address tokenIn, address tokenOut, uint256 amountIn, uint256 amountOut);
 
     function exactInputSingle(ISwapRouter.ExactInputSingleParams calldata params) contestLive external {
         // TODO: somehow screen the pool being interacted with to 
@@ -105,6 +115,8 @@ contract UniTradingContest {
         if(params.tokenIn == address(contestDenominationToken) || params.tokenOut == address(contestDenominationToken)){
             updateScore(msg.sender);
         }
+
+        emit Trade(msg.sender, params.tokenIn, params.tokenOut, params.amountIn, out);
     }
 
     function exactOutputSingle(ISwapRouter.ExactOutputSingleParams calldata params) contestLive external {
@@ -117,19 +129,32 @@ contract UniTradingContest {
         if(params.tokenIn == address(contestDenominationToken) || params.tokenOut == address(contestDenominationToken)){
             updateScore(msg.sender);
         }
+
+        emit Trade(msg.sender, params.tokenIn, params.tokenOut, amountIn, params.amountOut);
     }
+
+    event Withdraw(address indexed account, address asset, uint256 amount);
 
     function withdraw(address asset, uint256 amount) external {
+        if(asset == address(contestDenominationToken)){
+            updateScore(msg.sender);
+        }
         decreaseBalance(asset, msg.sender, amount);
         contestDenominationToken.safeTransfer(msg.sender, amount);
+
+        emit Withdraw(msg.sender, asset, amount);
     }
 
-    function withdrawPrize() external {
+    event WithdrawPrize(address indexed to, uint256 amount);
+
+    function withdrawPrize(address to) external {
         require(block.number > contestEndBlock, "contest not over");
-        require(msg.sender == _scoresHeap.nodes[0].id, "not winner");
+        require(msg.sender == _scoresHeap.getMax().id, "not winner");
         require(!prizeClaimed, "prize claimed");
         prizeClaimed = true;
-        contestDenominationToken.safeTransfer(msg.sender, prize());
+        contestDenominationToken.safeTransfer(to, prize());
+
+        emit WithdrawPrize(to, prize());
     }
 
     function prize() public returns (uint128) {
