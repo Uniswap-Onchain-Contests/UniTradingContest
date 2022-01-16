@@ -56,6 +56,8 @@ contract UniTradingContestTestEnterContest is DSTest {
     uint128 constant PRIZE_TAKE_PER_ENTRY = 100e18;
     uint128 constant DAO_TAKE_PER_ENTRY = 100e18;
     uint128 constant CREATOR_TAKE_PER_ENTRY = 100e18;
+    address constant creator = address(0x111);
+    string contestName = "Great Contest";
 
     function setUp() public {
         ISwapRouter router = new DummySwap();
@@ -64,12 +66,14 @@ contract UniTradingContestTestEnterContest is DSTest {
         contest = new UniTradingContest(
             START_BLOCK,
             END_BLOCK,
-            usdc,
             ENTRY_FEE,
             PRIZE_TAKE_PER_ENTRY,
             DAO_TAKE_PER_ENTRY,
             CREATOR_TAKE_PER_ENTRY,
-            router
+            creator,
+            usdc,
+            router,
+            contestName
         );
 
         vm.roll(START_BLOCK - 1);
@@ -152,13 +156,16 @@ contract UniTradingContestTest is DSTest {
         contest = new UniTradingContest(
             START_BLOCK,
             END_BLOCK,
-            usdc,
             ENTRY_FEE,
             PRIZE_TAKE_PER_ENTRY,
             DAO_TAKE_PER_ENTRY,
             CREATOR_TAKE_PER_ENTRY,
-            router
+            address(0),
+            usdc,
+            router,
+            "contest"
         );
+
         enterContest(competitor1);
         enterContest(competitor2);
         enterContest(competitor3);
@@ -250,3 +257,10 @@ contract UniTradingContestTest is DSTest {
         vm.stopPrank();
     }
 }
+
+// contest over tests 
+// dao withdrawal
+
+// creator withdrawal
+
+// prize withdrawal 

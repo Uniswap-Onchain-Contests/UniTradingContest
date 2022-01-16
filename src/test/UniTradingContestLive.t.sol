@@ -44,12 +44,14 @@ contract UniTradingContestLiveTest is DSTest {
         contest = new UniTradingContest(
             START_BLOCK,
             END_BLOCK,
-            usdc,
             ENTRY_FEE,
             PRIZE_TAKE_PER_ENTRY,
             DAO_TAKE_PER_ENTRY,
             CREATOR_TAKE_PER_ENTRY,
-            router
+            address(0),
+            usdc,
+            router,
+            "contest"
         );
 
         vm.roll(START_BLOCK - 1);

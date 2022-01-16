@@ -23,9 +23,14 @@ contract UniTradingContest {
     uint128 immutable public daoTakePerEntry;
     uint128 immutable public creatorTakePerEntry;
     uint128 immutable public contestantStartAmount;
-    Heap.Data private _scoresHeap;
+    address immutable public dao;
+    address immutable public creator;
+    string public name;
     ERC20 immutable public contestDenominationToken;
     ISwapRouter immutable _router;
+
+    Heap.Data private _scoresHeap;
+    
     mapping(uint160 => uint256) private _balances;
 
     modifier contestLive() {
@@ -53,21 +58,28 @@ contract UniTradingContest {
     constructor(
         uint32 _contestStartBlock,
         uint32 _contestEndBlock,
-        ERC20 _contestDenominationToken,
         uint128 _entryFee,
         uint128 _prizeTakePerEntry,
         uint128 _daoTakePerEntry, 
         uint128 _creatorTakePerEntry,
-        ISwapRouter _router_
+        address _creator,
+        ERC20 _contestDenominationToken,
+        ISwapRouter _router_,
+        string memory _name
     ) {
        contestStartBlock = _contestStartBlock;
        contestEndBlock = _contestEndBlock;
-       contestDenominationToken = _contestDenominationToken;
        entryFee = _entryFee;
        prizeTakePerEntry = _prizeTakePerEntry;
        daoTakePerEntry = _daoTakePerEntry;
        creatorTakePerEntry = _creatorTakePerEntry;
+       dao = msg.sender;
+       creator = _creator;
+       contestDenominationToken = _contestDenominationToken;
        _router = _router_;
+       name = _name;
+
+
        uint128 startAmount = uint128(_entryFee.sub(_prizeTakePerEntry).sub(_daoTakePerEntry).sub(_creatorTakePerEntry));
        require(startAmount > 0);
        contestantStartAmount = startAmount;
@@ -145,6 +157,10 @@ contract UniTradingContest {
         emit Withdraw(msg.sender, asset, amount);
     }
 
+    function prize() public view returns (uint128) {
+        return contestants * prizeTakePerEntry;
+    }
+
     event WithdrawPrize(address indexed to, uint256 amount);
 
     function withdrawPrize(address to) external {
@@ -157,16 +173,26 @@ contract UniTradingContest {
         emit WithdrawPrize(to, prize());
     }
 
-    function prize() public returns (uint128) {
-        return contestants * prizeTakePerEntry;
+    function creatorFees() public view returns (uint128) {
+        return contestants * creatorTakePerEntry;
     }
 
-    function daoFees() public returns (uint128) {
+    function withdrawCreatorFees(address to) external {
+        require(block.number > contestEndBlock, "contest not over");
+        require(msg.sender == creator);
+
+        contestDenominationToken.safeTransfer(to, creatorFees());
+    }
+
+    function daoFees() public view returns (uint128) {
         return contestants * daoTakePerEntry;
     }
 
-    function creatorFees() public returns (uint128) {
-        return contestants * creatorTakePerEntry;
+    function withdrawDaoFees() external {
+        require(block.number > contestEndBlock, "contest not over");
+        require(msg.sender == dao);
+
+        contestDenominationToken.safeTransfer(dao, daoFees());
     }
 
     function increaseBalance(address asset, address account, uint256 amount) private {
